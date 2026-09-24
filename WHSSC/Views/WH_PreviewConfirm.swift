@@ -90,7 +90,7 @@ struct WH_PreviewConfirm: View {
                             showAlertConfirmation = true
                             warehouse = "1"
                         }) {
-                            Image(systemName: "checkmark.circle.badge.plus")
+                            Image(systemName: "ccheckmark.circle")
                         }
                         .tint(Color.green)
                     }
@@ -115,7 +115,7 @@ struct WH_PreviewConfirm: View {
                             showAlertConfirmation = true
                             warehouse = "2"
                         }) {
-                            Image(systemName: "checkmark.circle.badge.plus")
+                            Image(systemName: "checkmark.circle")
                         }
                         .tint(Color.green)
                     }
@@ -140,7 +140,7 @@ struct WH_PreviewConfirm: View {
                             showAlertConfirmation = true
                             warehouse = "3"
                         }) {
-                            Image(systemName: "checkmark.circle.badge.plus")
+                            Image(systemName: "checkmark.circle")
                         }
                         .tint(Color.green)
                     }
@@ -165,7 +165,7 @@ struct WH_PreviewConfirm: View {
                             showAlertConfirmation = true
                             warehouse = "4"
                         }) {
-                            Image(systemName: "checkmark.circle.badge.plus")
+                            Image(systemName: "checkmark.circle")
                         }
                         .tint(Color.green)
                     }
@@ -187,6 +187,7 @@ struct WH_PreviewConfirm: View {
         .navigationDestination(isPresented: $goToTags) {
             WH_Tags(lotno: lotno)
         }
+        .navigationBarBackButtonHidden()
     }
     
     func proceedToSaveBatch(lotno: String, rhid: Int, warehousex: String) {

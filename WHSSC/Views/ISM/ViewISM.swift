@@ -8,11 +8,25 @@
 import SwiftUI
 
 struct ViewISM: View {
+    
+    let id: String
+    
     var body: some View {
-        Text(/*@START_MENU_TOKEN@*/"Hello, World!"/*@END_MENU_TOKEN@*/)
+        NavigationStack {
+            WebView(url: "https://ops.stellarseedscorp.org/modules/whs/print_ism_app.php?id=\(id)")
+                .ignoresSafeArea(edges: .bottom)
+                .navigationTitle("Warehouse")
+                .navigationBarTitleDisplayMode(.inline)
+                .onAppear {
+                    OrientationManager.lock(.landscape)
+                }
+                .onDisappear {
+                    OrientationManager.lock(.portrait)
+                }
+        }
     }
 }
 
 #Preview {
-    ViewISM()
+    ViewISM(id: "21")
 }

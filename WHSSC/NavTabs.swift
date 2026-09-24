@@ -9,7 +9,18 @@ import SwiftUI
 
 struct NavTabs: View {
     var body: some View {
-        Text(/*@START_MENU_TOKEN@*/"Hello, World!"/*@END_MENU_TOKEN@*/)
+        TabView {
+            NavigationStack {
+                ContentView()
+                    .navigationTitle("Dashboard")
+                    .navigationBarTitleDisplayMode(.inline)
+            }
+            .tabItem {
+                Image(systemName: "house.fill")
+                Text("Home")
+            }
+        }
+        .tint(.green)
     }
 }
 

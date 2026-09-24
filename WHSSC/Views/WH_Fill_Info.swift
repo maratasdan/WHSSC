@@ -23,6 +23,8 @@ struct WH_Fill_Info: View {
     let lotnumber: String
     let sessionID: String
     
+    @Environment(\.dismiss) private var dismiss
+    
     @State private var batchdetailsforism: [BatchDetailsForISM] = []
 
     @State private var orginalSite: String = ""
@@ -43,6 +45,8 @@ struct WH_Fill_Info: View {
     var body: some View {
 
         List {
+            
+            
 
             // MARK: - Header
 
@@ -57,6 +61,9 @@ struct WH_Fill_Info: View {
                     Text("Fill in the required information below.")
                         .font(.subheadline)
                         .foregroundStyle(.secondary)
+                    
+                    Text("SID: \(sessionID)")
+                        .font(.footnote)
                 }
                 .padding(.vertical, 8)
                 .listRowBackground(Color.clear)
@@ -132,7 +139,6 @@ struct WH_Fill_Info: View {
 
                         TextField("Enter bin number", text: $binno)
                             .textInputAutocapitalization(.characters)
-                            .disabled(true)
                     }
                 }
 
@@ -167,7 +173,6 @@ struct WH_Fill_Info: View {
 
                         TextField("Enter flagging", text: $flagging)
                             .textInputAutocapitalization(.words)
-                            .disabled(true)
                     }
                 }
             }
@@ -258,14 +263,19 @@ struct WH_Fill_Info: View {
         // MARK: - Navigation
         
         .navigationDestination(isPresented: $goToHome) {
-            WH_Dashboard()
+            ContentView()
         }
 
         // MARK: - Alert
 
         .alert("Transfer Submission", isPresented: $showAlert) {
 
-            Button("OK", role: .cancel) { }
+            Button("OK", role: .cancel) {
+                DispatchQueue.main.async {
+                    closeEntireSheet()
+//                    dismiss()
+                }
+            }
 
         } message: {
 
@@ -433,7 +443,7 @@ struct WH_Fill_Info: View {
             if result == "savetag" {
 
                 alertMessage = "Transfer successfully submitted!"
-                goToHome = true
+//                goToHome = true
                 // Add your navigation action here if needed.
 
             } else {

@@ -16,16 +16,23 @@ struct WarehouseListDetails: Codable, Identifiable {
     var datetransfer: String
     var prepared: String
     var verified: String
+    var sessionid: String
 }
 
 struct WarehouseList: View {
     
     let wh: String
     
+    @State private var sessionidStr: String = ""
+    
+    //MARK: Arrays
     @State private var warehouselistdet: [WarehouseListDetails] = []
     
     //MARK: Search Box
     @State private var searchText = ""
+    
+    //MARK: Navigations
+    @State private var goTo_WHDetails: Bool = false
     
     var filteredWarehouseList: [WarehouseListDetails] {
         if searchText.isEmpty {
@@ -75,7 +82,20 @@ struct WarehouseList: View {
                                                 .foregroundStyle(Color.secondary)
                                         }
                                         Spacer()
+                                        Image(systemName: "chevron.right")
+                                            .resizable()
+                                            .scaledToFit()
+                                            .frame(width: 10, height: 20)
+                                            .foregroundStyle(.green)
+                                            .onTapGesture {
+                                                sessionidStr = item.sessionid
+                                                goTo_WHDetails = true
+                                            }
                                     }
+                                }
+                                .onTapGesture {
+                                    sessionidStr = item.sessionid
+                                    goTo_WHDetails = true
                                 }
                                 .contextMenu {
                                     Label("\(item.rhid)", systemImage: "ellipsis.curlybraces")
@@ -89,12 +109,17 @@ struct WarehouseList: View {
                     }
                 }
                 .padding(20)
+                //MARK: Searchbox
+                .searchable(text: $searchText, prompt: "Search lot number")
+                //MARK: Fetcher
+                .task {
+                    await getWHListDetails(wh: wh)
+                }
+                //MAKR: Navigations
+                .navigationDestination(isPresented: $goTo_WHDetails) {
+                    WhDetails(sessionid: sessionidStr)
+                }
             }
-            .searchable(text: $searchText, prompt: "Search lot number or bin")
-            .task {
-                await getWHListDetails(wh: wh)
-            }
-            //MARK: Searchbox
         }
     }
     

@@ -22,6 +22,9 @@ struct WH_ConfirmTransfer: View {
     @State private var batchdatacn: [BatchDataCN] = []
     @State private var openConfirmAlert = false
     @State private var goToPreviewConfirm = false
+    
+    //MARK: Navigation Home
+    @State private var goToHome: Bool = false
 
     var body: some View {
         List {
@@ -64,16 +67,21 @@ struct WH_ConfirmTransfer: View {
             }
         }
         .navigationTitle("Confirm Transfer")
+        .navigationBarBackButtonHidden()
         .navigationDestination(isPresented: $goToPreviewConfirm) {
-            WH_PreviewConfirm(
-                lotno: lotno,
-                rhid: rhid,
-                processtype: processtype,
-                jbno: jbno,
-                kg: kg,
-                tagid: tagid
-            )
+                WH_PreviewConfirm(
+                    lotno: lotno,
+                    rhid: rhid,
+                    processtype: processtype,
+                    jbno: jbno,
+                    kg: kg,
+                    tagid: tagid
+                )
         }
+        .navigationDestination(isPresented: $goToHome) {
+            NavTabs()
+        }
+        
         .alert("Confirmation", isPresented: $openConfirmAlert) {
             Button("Cancel", role: .cancel) {}
 

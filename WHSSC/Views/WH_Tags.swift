@@ -11,9 +11,17 @@ struct JBTags: Codable {
     let tagid: String
     let lotno: String
     let jbno: String
-    let kg: String?
-    let sessionid: String?
-    let status: String?
+    let quantity: String
+}
+
+struct JBTagsScanned: Codable, Identifiable {
+    var id: String
+    var sessionid: String
+    var tagid: String
+    var jbno: String
+    var kg: String
+    var date_created: String
+    var status: String
 }
 
 struct BatchDataCNTags: Codable, Identifiable {
@@ -31,56 +39,60 @@ struct WH_Tags: View {
     let lotno: String
     
     @State private var jbtags: [JBTags] = []
+    @State private var jbtagscanned: [JBTagsScanned] = []
     @State private var batchdatacntags: [BatchDataCNTags] = []
     
     @State private var showAlertConfirmTransfer: Bool = false
     @State private var gotohome: Bool = false
     @State private var goToFillInfo: Bool = false
     
+    @State private var sessionstring: String = ""
+    
     var body: some View {
         NavigationStack {
             List {
-                ForEach(Array(jbtags.enumerated()), id: \.element.tagid) { index, item in
-                    
-                    if item.status == "1" {
-                        HStack {
-                            ZStack {
-                                Rectangle()
-                                    .frame(width: 40, height: 40)
-                                    .cornerRadius(10)
-                                    .foregroundStyle(Color.green.opacity(0.15))
+                Section("Queue Tags") {
+                    ForEach(Array(jbtags.enumerated()), id: \.element.tagid) { index, item in
 
-                                Text("\(index + 1)")
-                                    .bold()
+                        if !jbtagscanned.contains(where: { $0.tagid == item.tagid }) {
+
+                            // Wala pa na-scan
+                            NavigationLink(
+                                destination: WH_Tags_Scan(
+                                    tagid: item.tagid,
+                                    sessionid: batchdatacntags.first?.sessionid ?? ""
+                                )
+                            ) {
+                                HStack {
+                                    ZStack {
+                                        Rectangle()
+                                            .frame(width: 40, height: 40)
+                                            .cornerRadius(10)
+                                            .foregroundStyle(Color.red.opacity(0.15))
+
+                                        Text("\(index + 1)")
+                                            .bold()
+                                    }
+
+                                    VStack(alignment: .leading) {
+                                        Text(item.jbno)
+
+                                        Text("Quantity: \(item.quantity) KG")
+                                            .font(.footnote)
+                                            .foregroundStyle(.secondary)
+                                    }
+                                }
                             }
 
-                            VStack(alignment: .leading) {
-                                Text(item.jbno)
+                        } else {
 
-                                Text("Quantity: \(item.kg ?? "0") KG")
-                                    .font(.footnote)
-                                    .foregroundStyle(.secondary)
-                            }
-
-                            Spacer()
-
-                            Image(systemName: "checkmark.circle.fill")
-                                .foregroundStyle(.green)
-                        }
-
-                    } else {
-                        NavigationLink(
-                            destination: WH_Tags_Scan(
-                                tagid: item.tagid,
-                                sessionid: batchdatacntags.first?.sessionid ?? ""
-                            )
-                        ) {
+                            // Na-scan na
                             HStack {
                                 ZStack {
                                     Rectangle()
                                         .frame(width: 40, height: 40)
                                         .cornerRadius(10)
-                                        .foregroundStyle(Color.red.opacity(0.15))
+                                        .foregroundStyle(Color.green.opacity(0.15))
 
                                     Text("\(index + 1)")
                                         .bold()
@@ -89,28 +101,68 @@ struct WH_Tags: View {
                                 VStack(alignment: .leading) {
                                     Text(item.jbno)
 
-                                    Text("Quantity: \(item.kg ?? "0") KG")
+                                    Text("Quantity: \(item.quantity) KG")
                                         .font(.footnote)
                                         .foregroundStyle(.secondary)
                                 }
+
+                                Spacer()
+
+                                Image(systemName: "checkmark.circle.fill")
+                                    .foregroundStyle(.green)
                             }
                         }
                     }
                 }
+                
+//                Section("Scanned Tags") {
+//                    ForEach(Array(jbtagscanned.enumerated()), id: \.element.tagid) { index, item in
+//                        HStack {
+//                            ZStack {
+//                                Rectangle()
+//                                    .frame(width: 40, height: 40)
+//                                    .cornerRadius(10)
+//                                    .foregroundStyle(Color.green.opacity(0.15))
+//
+//                                Text("\(index + 1)")
+//                                    .bold()
+//                            }
+//
+//                            VStack(alignment: .leading) {
+//                                Text(item.jbno)
+//
+//                                Text("Quantity: \(item.kg) KG")
+//                                    .font(.footnote)
+//                                    .foregroundStyle(.secondary)
+//                            }
+//
+//                            Spacer()
+//
+//                            Image(systemName: "checkmark.circle.fill")
+//                                .foregroundStyle(.green)
+//                        }
+//                    }
+//                }
+                
+                VStack {
+                    
+                    Text("sid: \(batchdatacntags.first?.sessionid ?? "NA")")
+                        .font(.footnote)
+                }
             }
         }
         .alert("Confirmation", isPresented: $showAlertConfirmTransfer) {
-            Button("Cancel", role: .close) {
+            Button("Cancel") {
                 
             }
-            Button("Confirm", role: .confirm) {
+            Button("Confirm") {
                 goToFillInfo = true
             }
         } message: {
             Text("Are you sure you want to transfer these tags?")
         }
         .navigationDestination(isPresented: $gotohome) {
-            WH_Dashboard()
+            ContentView()
         }
         .navigationDestination(isPresented: $goToFillInfo) {
             WH_Fill_Info(
@@ -120,14 +172,6 @@ struct WH_Tags: View {
         }
         .navigationBarBackButtonHidden(true)
         .toolbar {
-            ToolbarItem(placement: .topBarLeading) {
-                Button(action: {
-                    gotohome = true
-                }) {
-                    Image(systemName: "chevron.backward")
-                }
-            }
-            
             ToolbarItem(placement: .topBarTrailing) {
                 Button(action: {
                     showAlertConfirmTransfer = true
@@ -152,7 +196,7 @@ struct WH_Tags: View {
         var request = URLRequest(url: url)
         request.httpMethod = "POST"
 
-        let body = "lotnumber=\(lotno)"
+        let body = "lotnumber=\(lotno)&sessionid=\(batchdatacntags.first?.sessionid ?? "NA")"
 
         request.httpBody = body.data(using: .utf8)
         request.setValue("application/x-www-form-urlencoded", forHTTPHeaderField: "Content-Type")
@@ -169,11 +213,51 @@ struct WH_Tags: View {
             do {
                 
                 let result = try JSONDecoder().decode([JBTags].self, from: data)
-                
-                print("tagsdatareq: \(result)")
 
                 DispatchQueue.main.async {
                     self.jbtags = result
+                }
+            } catch {
+                print(error)
+            }
+
+        }.resume()
+    }
+    
+    
+    func getTagsxx(sessionid: String) {
+//        guard let url = URL(string: "https://ops.stellarseedscorp.org/App/Warehouse/get_tags_scanned.php?sessionid=\(sessionid)") else {
+//            return
+//        }
+//        do {
+//            let (data, _) = try await URLSession.shared.data(from: url)
+//            let result = try JSONDecoder().decode([JBTagsScanned].self, from: data)
+//            jbtagscanned = result
+//            print("Dan: ",result)
+//        } catch {
+//            print("Error Dan", error.localizedDescription)
+//        }
+        
+        guard let url = URL(string: "https://ops.stellarseedscorp.org/App/Warehouse/get_tags_scanned.php?sessionid=\(sessionid)") else {
+            return
+        }
+
+        URLSession.shared.dataTask(with: url) { data, response, error in
+
+            if let error = error {
+                print(error.localizedDescription)
+                return
+            }
+
+            guard let data = data else { return }
+
+            do {
+                
+                let result = try JSONDecoder().decode([JBTagsScanned].self, from: data)
+
+                DispatchQueue.main.async {
+                    self.jbtagscanned = result
+                    print("Dan: ", result)
                 }
             } catch {
                 print(error)
@@ -209,6 +293,9 @@ struct WH_Tags: View {
 
                 DispatchQueue.main.async {
                     self.batchdatacntags = result
+                    print("Sessionid: \(batchdatacntags.first?.sessionid ?? "NO DAN")")
+                    self.sessionstring = result.first?.sessionid ?? "NONODAN"
+                    getTagsxx(sessionid: result.first?.sessionid ?? "Hays")
                 }
 
             } catch {
