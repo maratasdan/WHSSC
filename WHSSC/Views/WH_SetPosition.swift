@@ -19,62 +19,75 @@ struct WHSlots: Identifiable, Codable {
     var slotrem: Int
     var is_full: Bool
     var slotremp: Double
+    
+    var bagCount: Int {
+        Int(total_bags) ?? 0
+    }
+
+    var progressColor: Color {
+        switch bagCount {
+        case 0:
+            return .green
+        case 1:
+            return .yellow
+        case 2:
+            return .orange
+        default:
+            return .red
+        }
+    }
 }
+
+
+
 
 struct WH_SetPosition: View {
     
     @State private var whslots: [WHSlots] = []
     
+    private var groupedSlots: [(letter: String, slots: [WHSlots])] {
+        let grouped = Dictionary(grouping: whslots) { item in
+            String(item.label.prefix(1)).uppercased()
+        }
+
+        return grouped.keys.sorted().map { letter in
+            (letter: letter, slots: grouped[letter] ?? [])
+        }
+    }
+    
     var body: some View {
         NavigationStack {
-            List(whslots) { itemx in
-                NavigationLink(destination: JumboBag3DView(elementID: itemx.element_id)) {
-                    HStack(spacing: 10) {
-                        ZStack {
-                            ZStack {
-                                Circle()
-                                    .stroke(.gray.opacity(0.2), lineWidth: 2)
+            List {
+                ForEach(groupedSlots, id: \.letter) { group in
+                    NavigationLink {
+                        WHSlotDetails(letter: group.letter, slots: group.slots)
+                    } label: {
+                        HStack(spacing: 12) {
+                            Image(systemName: "square.stack.3d.up")
+                                .font(.title2)
+                                .foregroundStyle(.green)
+                                .frame(width: 45, height: 45)
 
-                                Circle()
-                                    .trim(from: 0, to: Double(itemx.slotremp))
-                                    .stroke(.green, style: StrokeStyle(lineWidth: 2, lineCap: .round))
-                                    .rotationEffect(.degrees(-90))
-                            }
-                            .frame(width: 50, height: 50)
-                                
-                            Image(systemName: "square.stack")
-                                .resizable()
-                                .foregroundStyle(Color.green)
-                                .frame(width: 20, height: 20)
-                        }
-                        VStack(alignment: .leading) {
-                            HStack {
-                                Text("\(itemx.label)")
-                                    .bold()
+                            VStack(alignment: .leading, spacing: 4) {
+                                Text("Section \(group.letter)")
                                     .font(.headline)
-                                if itemx.is_full == true {
-                                    ZStack {
-                                        Rectangle()
-                                            .frame(width: 40, height: 17)
-                                            .foregroundStyle(Color.green)
-                                            .cornerRadius(5)
-                                        Text("FULL")
-                                            .font(.system(size: 10))
-                                            .foregroundStyle(Color.white)
-                                            .bold()
-                                    }
-                                }
-                            }
-                            HStack {
-                                Text("Slots: \(itemx.slotrem)/\(itemx.max_bags)")
+
+                                Text("\(group.slots.count) positions")
                                     .font(.footnote)
-                                Text("Total Kg: \(itemx.total_kg ?? "0")")
-                                    .font(.footnote)
+                                    .foregroundStyle(.secondary)
                             }
+
+                            Spacer()
+
+//                            Image(systemName: "chevron.right")
+//                                .font(.footnote)
+//                                .foregroundStyle(.secondary)
                         }
+                        .padding(.vertical, 4)
                     }
                 }
             }
+            .navigationTitle("Warehouse Positions")
         }
         .task {
             await getWHSlots()
@@ -91,6 +104,63 @@ struct WH_SetPosition: View {
         } catch {
             print("Error: \(error.localizedDescription)")
         }
+    }
+}
+
+struct WHSlotDetails: View {
+    let letter: String
+    let slots: [WHSlots]
+
+    var body: some View {
+        List(slots) { itemx in
+            NavigationLink {
+                JumboBag3DView(elementID: itemx.element_id)
+            } label: {
+                HStack(spacing: 10) {
+                    ZStack {
+                        Circle()
+                            .stroke(.green.opacity(0.15), lineWidth: 2)
+
+                        Circle()
+                            .trim(from: 0, to: max(0, min(1, itemx.slotremp)))
+                            .stroke(itemx.progressColor, style: StrokeStyle(lineWidth: 2, lineCap: .round))
+                            .rotationEffect(.degrees(-90))
+                    }
+                    .frame(width: 45, height: 45)
+                    .overlay {
+                        Image(systemName: "square.stack.3d.up")
+                            .foregroundStyle(itemx.progressColor)
+                    }
+
+                    VStack(alignment: .leading, spacing: 5) {
+                        HStack {
+                            Text(itemx.label)
+                                .font(.headline)
+
+//                            if itemx.is_full {
+//                                Text("FULL")
+//                                    .font(.caption2.bold())
+//                                    .foregroundStyle(.white)
+//                                    .padding(.horizontal, 7)
+//                                    .padding(.vertical, 3)
+//                                    .background(.green)
+//                                    .clipShape(RoundedRectangle(cornerRadius: 4))
+//                            }
+                        }
+
+                        Text("Slots: \(itemx.slotrem)/\(itemx.max_bags)")
+                            .font(.footnote)
+
+                        Text("Total Kg: \(itemx.total_kg ?? "0")")
+                            .font(.footnote)
+                            .foregroundStyle(.secondary)
+                    }
+                }
+                .padding(.vertical, 4)
+            }
+        }
+        .navigationTitle("Section \(letter)")
+        .navigationBarTitleDisplayMode(.inline)
     }
 }
 

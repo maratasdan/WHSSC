@@ -230,43 +230,63 @@ struct JumboBag3DView: View {
                                 .padding(.vertical, 12)
                         }
 
-                        ForEach(visibleBags) { bag in
+                        ForEach(1...maxStack, id: \.self) { level in
+                            let bag = visibleBags.first { $0.level == level }
+                            let position = level == 1 ? "Bottom" : level == 2 ? "Middle" : "Top"
+
                             HStack(spacing: 12) {
-                                Text("\(bag.level)")
+                                Text("\(level)")
                                     .font(.headline)
-                                    .foregroundStyle(.green)
+                                    .foregroundStyle(bag == nil ? .gray : .green)
                                     .frame(width: 36, height: 36)
-                                    .background(.green.opacity(0.12))
+                                    .background(bag == nil ? Color.gray.opacity(0.12) : Color.green.opacity(0.12))
                                     .clipShape(RoundedRectangle(cornerRadius: 10))
 
                                 VStack(alignment: .leading, spacing: 4) {
-                                    Text(bag.bagNumber)
-                                        .font(.subheadline.bold())
+                                    
 
-                                    Text("Batch: \(bag.batch)")
-                                        .font(.caption)
-                                        .foregroundStyle(.secondary)
-
-                                    Text("Stack Level \(bag.level)")
-                                        .font(.caption2)
-                                        .foregroundStyle(.secondary)
+                                    if let bag {
+                                        Text(bag.bagNumber)
+                                            .font(.subheadline.bold())
+                                        Text("Batch: \(bag.batch)")
+                                            .font(.caption)
+                                            .foregroundStyle(.secondary)
+                                    } else {
+                                        Text("Assign Bag")
+                                            .font(.subheadline.bold())
+                                            .foregroundStyle(.green)
+                                        Text("\(position)")
+                                            .font(.caption)
+                                            .foregroundStyle(.secondary)
+                                    }
                                 }
 
                                 Spacer()
 
-                                Text("\(bag.weightValue.formatted(.number.precision(.fractionLength(2)))) kg")
-                                    .font(.subheadline.monospacedDigit())
+                                if let bag {
+                                    VStack(alignment: .trailing) {
+                                        Text("\(bag.weightValue.formatted(.number.precision(.fractionLength(2)))) kg")
+                                            .font(.subheadline.monospacedDigit())
+                                        Text("\(position)")
+                                            .font(.caption)
+                                            .foregroundStyle(.secondary)
+                                    }
+                                } else {
+                                    Image(systemName: "plus.circle")
+                                        .foregroundStyle(.green)
+                                }
                             }
                             .padding(10)
                             .background(Color.gray.opacity(0.07))
                             .clipShape(RoundedRectangle(cornerRadius: 12))
                         }
+
                     }
                 }
             }
             .padding()
         }
-        .navigationTitle("Jumbo Bag 3D")
+        .navigationTitle("Jumbo Assignment")
         .navigationBarTitleDisplayMode(.inline)
         .task {
             await fetchBags()
