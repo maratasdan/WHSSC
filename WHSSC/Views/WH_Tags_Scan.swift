@@ -31,6 +31,7 @@ struct WH_Tags_Scan: View {
     
     @State private var showAlertError: Bool = false
     @State private var showSheetPleaseWait: Bool = false
+    @State private var showSetPosition: Bool = false
     
     var body: some View {
         NavigationStack {
@@ -60,6 +61,9 @@ struct WH_Tags_Scan: View {
                     .scaleEffect(1.5)
             }
             .interactiveDismissDisabled()
+        }
+        .navigationDestination(isPresented: $showSetPosition) {
+            WH_SetPosition()
         }
     }
     
@@ -122,7 +126,8 @@ struct WH_Tags_Scan: View {
                 if String(data: data, encoding: .utf8)?.trimmingCharacters(in: .whitespacesAndNewlines) == "newtag" {
                     DispatchQueue.main.async {
                         showSheetPleaseWait = false
-                        dismiss()
+//                        dismiss()
+                        showSetPosition = true
                     }
                 }
             }
