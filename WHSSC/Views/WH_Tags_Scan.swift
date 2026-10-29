@@ -63,7 +63,7 @@ struct WH_Tags_Scan: View {
             .interactiveDismissDisabled()
         }
         .navigationDestination(isPresented: $showSetPosition) {
-            WH_SetPosition()
+            WH_SetPosition(tagid: tagid, sessionid: sessionid)
         }
     }
     

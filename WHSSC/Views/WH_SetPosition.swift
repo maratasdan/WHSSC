@@ -43,6 +43,9 @@ struct WHSlots: Identifiable, Codable {
 
 struct WH_SetPosition: View {
     
+    let tagid: String
+    let sessionid: String
+    
     @State private var whslots: [WHSlots] = []
     
     private var groupedSlots: [(letter: String, slots: [WHSlots])] {
@@ -60,7 +63,12 @@ struct WH_SetPosition: View {
             List {
                 ForEach(groupedSlots, id: \.letter) { group in
                     NavigationLink {
-                        WHSlotDetails(letter: group.letter, slots: group.slots)
+                        WHSlotDetails(
+                            letter: group.letter,
+                            slots: group.slots,
+                            tagid: tagid,
+                            sessionid: sessionid
+                        )
                     } label: {
                         HStack(spacing: 12) {
                             Image(systemName: "square.stack.3d.up")
@@ -108,13 +116,18 @@ struct WH_SetPosition: View {
 }
 
 struct WHSlotDetails: View {
+    
     let letter: String
     let slots: [WHSlots]
+    let tagid: String
+    let sessionid: String
 
     var body: some View {
         List(slots) { itemx in
             NavigationLink {
-                JumboBag3DView(elementID: itemx.element_id)
+                JumboBag3DView(elementID: itemx.element_id,
+                               tagid: tagid,
+                               sessionid: sessionid)
             } label: {
                 HStack(spacing: 10) {
                     ZStack {
@@ -165,5 +178,5 @@ struct WHSlotDetails: View {
 }
 
 #Preview {
-    WH_SetPosition()
+    WH_SetPosition(tagid: "", sessionid: "")
 }
